@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--设置log4j2的自身log级别为warn-->
+<!--日志级别以及优先级排序: OFF > FATAL > ERROR > WARN > INFO > DEBUG > TRACE > ALL -->
+<!--Configuration后面的status，这个用于设置log4j2自身内部的信息输出，可以不设置，
+    当设置成trace时，你会看到log4j2内部各种详细输出-->
+<!--monitorInterval：Log4j能够自动检测修改配置 文件和重新配置本身，设置间隔秒数-->
+<configuration status="warn" monitorInterval="30">
+
+    <properties>
+        <!-- 本地日志存放路径，根据需要自定义 -->
+        <property name="filepath" value="logs"></property>
+        <!-- log4j2 flume日志采集相关配置变量 -->
+        <!-- 模块名 -->
+        <property name="log4j2.flume.module" value="dgate-configure-center"></property>
+        <!-- flume服务ip -->
+        <property name="log4j2.flume.ip" value="172.18.2.23"></property>
+        <!-- flume服务端口 -->
+        <property name="log4j2.flume.port" value="44444"></property>
+
+    </properties>
+
+    <!--先定义所有的appender-->
+    <appenders>
+        <!--这个输出控制台的配置-->
+        <console name="Console" target="SYSTEM_OUT">
+            <!--输出日志的格式-->
+            <!--<PatternLayout pattern="[%d{HH:mm:ss:SSS}] [%p] - %l - %m%n"/>-->
+            <!-- 控制台使用彩色日志 -->
+            <PatternLayout
+                    pattern="[%style{%d}{bright,green}][%highlight{%p}][%style{%t}{bright,blue}][%style{%C}{bright,yellow}]: %msg%n%style{%throwable}{red}"
+                    disableAnsi="false" noConsoleNoAnsi="false"/>
+        </console>
+        <RollingFile name="RollingFileDebug" fileName="${filepath}/debug.log"
+                     filePattern="${filepath}/$${date:yyyy-MM}/debug-%d{yyyy-MM-dd}-%i.log">
+            <Filters>
+                <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
+                <ThresholdFilter level="INFO" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="DEBUG" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <PatternLayout pattern="[%d{HH:mm:ss:SSS}] [%p] - %l - %m%n"/>
+            <Policies>
+                <!-- 基于时间的滚动策略，interval属性用来指定多久滚动一次，默认是1 hour -->
+                <TimeBasedTriggeringPolicy interval="10" modulate="true"/>
+                <!-- 基于文件大小策略 -->
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+                <!-- DefaultRolloverStrategy:用来指定同一个文件夹下最多有几个日志文件时开始删除最旧的，创建新的(通过max属性) -->
+            </Policies>
+        </RollingFile>
+
+        <RollingFile name="RollingFileInfo" fileName="${filepath}/info.log"
+                     filePattern="${filepath}/$${date:yyyy-MM}/info-%d{yyyy-MM-dd}-%i.log">
+            <Filters>
+                <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
+                <ThresholdFilter level="WARN" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <PatternLayout pattern="[%d{HH:mm:ss:SSS}] [%p] - %l - %m%n"/>
+            <Policies>
+                <!-- 基于时间的滚动策略，interval属性用来指定多久滚动一次，默认是1 hour -->
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!-- 基于文件大小策略 -->
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+                <!-- DefaultRolloverStrategy:用来指定同一个文件夹下最多有几个日志文件时开始删除最旧的，创建新的(通过max属性) -->
+            </Policies>
+        </RollingFile>
+
+        <RollingFile name="RollingFileWarn" fileName="${filepath}/warn.log"
+                     filePattern="${filepath}/$${date:yyyy-MM}/warn-%d{yyyy-MM-dd}-%i.log">
+            <Filters>
+                <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="WARN" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <PatternLayout pattern="[%d{HH:mm:ss:SSS}] [%p] - %l - %m%n"/>
+            <Policies>
+                <!-- 基于时间的滚动策略，interval属性用来指定多久滚动一次，默认是1 hour -->
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!-- 基于文件大小策略 -->
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+                <!-- DefaultRolloverStrategy:用来指定同一个文件夹下最多有几个日志文件时开始删除最旧的，创建新的(通过max属性) -->
+            </Policies>
+            <!-- DefaultRolloverStrategy属性如不设置，则默认为最多同一文件夹下7个文件，这里设置了20 -->
+            <DefaultRolloverStrategy max="20"/>
+        </RollingFile>
+
+        <RollingFile name="RollingFileError" fileName="${filepath}/error.log"
+                     filePattern="${filepath}/$${date:yyyy-MM}/error-%d{yyyy-MM-dd}-%i.log">
+            <Filters>
+                <ThresholdFilter level="ERROR"/>
+            </Filters>
+            <PatternLayout pattern="[%d{HH:mm:ss:SSS}] [%p] - %l - %m%n"/>
+            <Policies>
+                <!-- 基于时间的滚动策略，interval属性用来指定多久滚动一次，默认是1 hour -->
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!-- 基于文件大小策略 -->
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+                <!-- DefaultRolloverStrategy:用来指定同一个文件夹下最多有几个日志文件时开始删除最旧的，创建新的(通过max属性) -->
+            </Policies>
+        </RollingFile>
+
+	    <Async name="AsyncFlume">
+	      <AppenderRef ref="FlumeInfo"/>
+	    </Async>
+        <Flume name="FlumeInfo" compress="false" type="avro" ignoreExceptions="false" agentRetries="3">
+            <Agent host="${log4j2.flume.ip}" port="${log4j2.flume.port}"/>
+            <!--输出方式为json-->
+            <!--<JSONLayout/>-->
+            <PatternLayout pattern="${sys:localip} ${log4j2.flume.module} %d %p [%t] {%l} - %m" />
+            <!--            <RFC5424Layout enterpriseNumber="18060" includeMDC="true" appName="es"/>-->
+        </Flume>
+
+    </appenders>
+    <!--然后定义logger，只有定义了logger并引入的appender，appender才会生效-->
+    <loggers>
+<!--        <logger name = "com.datasw.gateway.configure" level="DEBUG" additivity="false">-->
+<!--            <appender-ref ref="Console"/>-->
+<!--            <appender-ref ref="RollingFileDebug"/>-->
+<!--            <appender-ref ref="RollingFileInfo"/>-->
+<!--        </logger>-->
+
+        <!-- mybatis SQL打印设置，注意这里是写自己Mapper的包名，而不是mybatis的 -->
+<!--        <logger name="mapper" level="DEBUG"></logger>-->
+
+        <!--过滤掉spring和hibernate,swagger等的一些无用的debug信息-->
+        <logger name="org.springframework" level="INFO"></logger>
+        <logger name="org.mybatis" level="INFO" additivity="false"></logger>
+        <logger name="org.hibernate" level="INFO" additivity="false"></logger>
+        <logger name="springfox" level="INFO"></logger>
+
+
+        <root level="all">
+            <appender-ref ref="Console"/>
+            <appender-ref ref="RollingFileDebug"/>
+            <appender-ref ref="RollingFileInfo"/>
+            <appender-ref ref="RollingFileWarn"/>
+            <appender-ref ref="RollingFileError"/>
+            <!-- 需要接入日志系统时，请打开以下注释，并按照实际情况修改log4j2.flume.ip、log4j2.flume.port两个属性值 -->
+<!--            <appender-ref ref="AsyncFlume"/>-->
+        </root>
+    </loggers>
+
+</configuration>
