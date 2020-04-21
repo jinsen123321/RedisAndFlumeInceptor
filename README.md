@@ -1,0 +1,3 @@
+# RedisAndFlumeInceptor
+redis连接池以及flumeinceptor混合使用
+测试了 redis连接池 以及 配合flume的inceptor进行使用 实现了缓存数据的拦截比较
